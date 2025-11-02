@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="index.js"></script>
+    <style>
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        p {
+            text-align: center;
+            font-size: 20px;
+        }
+        #gameClear, #gameControls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+    <title>Space Invaders</title>
+</head>
+<canvas id="gameCanvas" width="600" height="800"></canvas>
+<p>Score: <span id="score">0</span></p>
+<div id="endGameContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10;">
+    <p id="gameClear" style="font-size: 24px;">Clear!</p>
+    <div id="gameControls">
+        <button class="btn btn-primary" onclick="restartGame()">もう一度プレイする</button>
+        <button class="btn btn-secondary" onclick="goBack()">前のページへ戻る</button>
+    </div>
+</div>    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        const player = { 
+            x: canvas.width / 2, 
+            y: canvas.height - (canvas.height * 0.05), 
+            width: canvas.width * 0.0375, 
+            height: canvas.height * 0.05, 
+            speed: 5 
+        };
+
+        const bullets = [];
+        const invaders = [];
+        const invaderRows = 5;
+        const invaderColumns = 11;
+        const invaderSpeed = 0.5;
+        let animationId;
+        let invaderDirection = 1;
+        let leftPressed = false;
+        let rightPressed = false;
+        let lastTime = 0;
+        let score = 0;
+        let gameOver = false;
+        let lastShotTime = 0;
+        const shotInterval = 300; // 300ms = 0.3 seconds
+
+        for (let i = 0; i < invaderRows; i++) {
+            for (let j = 0; j < invaderColumns; j++) {
+                invaders.push({ x: j * 40 + 30, y: i * 40 + 30, width: 30, height: 30 });
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') leftPressed = true;
+            if (e.key === 'ArrowRight') rightPressed = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') leftPressed = false;
+            if (e.key === 'ArrowRight') rightPressed = false;
+        });
+
+        function detectCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (leftPressed) player.x -= player.speed;
+            if (rightPressed) player.x += player.speed;
+
+            if (timestamp - lastShotTime > shotInterval) {
+                bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 20, speed: 7 });
+                lastShotTime = timestamp;
+            }
+
+            // 弾の移動、衝突の検出などのゲームのメインロジック
+            // 弾の移動と描画
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.y -= bullet.speed;
+                if (bullet.y + bullet.height < 0) bullets.splice(i, 1);
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                
+                // 弾とインベーダーの衝突検出
+                for (let j = invaders.length - 1; j >= 0; j--) {
+                    const invader = invaders[j];
+                    if (detectCollision(bullet, invader)) {
+                        invaders.splice(j, 1);
+                        bullets.splice(i, 1);
+                        score += 10;
+                        scoreElement.innerText = score;
+                        break;
+                    }
+                }
+            }
+
+            // インベーダーの移動と描画
+            let moveDown = false;
+            for (let i = invaders.length - 1; i >= 0; i--) {
+                const invader = invaders[i];
+                invader.x += invaderSpeed * invaderDirection;
+                if (invader.x + invader.width > canvas.width || invader.x < 0) {
+                    moveDown = true;
+                }
+                if (invader.y + invader.height > player.y) {
+                    gameOver = true;
+                    document.getElementById('endGameContainer').style.display = 'block';
+                    return; // ゲームループを終了
+                }
+                ctx.fillRect(invader.x, invader.y, invader.width, invader.height);
+            }
+
+            // インベーダーが画面の端に到達した場合の処理
+            if (moveDown) {
+                invaderDirection *= -1;
+                for (let invader of invaders) {
+                    invader.y += 30;
+                }
+            }
+
+            // プレイヤーの描画
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // インベーダーがすべて撃破されたかチェック
+            if (invaders.length === 0) {
+                document.getElementById('gameClear').style.display = 'block';
+                document.getElementById('endGameContainer').style.display = 'block';
+                return; // ゲームループを終了
+            }
+
+            // インベーダーがプレイヤーに到達したかチェック
+            if (gameOver) {
+                gameOverElement.style.display = 'block';
+                document.getElementById('endGameContainer').style.display = 'block';
+                return; // ゲームループを終了
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function restartGame() {
+            location.reload(); // ページをリロード
+        }
+
+
+        function goBack() {
+            window.history.back(); // 前のページへ戻る
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
