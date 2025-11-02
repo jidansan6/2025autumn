@@ -1,12 +1,56 @@
+/* スタイリッシュなTech0風ボタン（全体のテイストに合わせる） */
+.btn,
+.btn-sm,
+.btn-primary,
+.btn-light,
+.btn-success,
+.btn-secondary {
+    border: none;
+    border-radius: 2em;
+    padding: 0.45em 1.4em;
+    font-weight: 600;
+    font-size: 0.9em;
+    letter-spacing: 0.04em;
+    background: linear-gradient(90deg, #7fc6ff 0%, #b58aff 60%, #ffd1fb 100%);
+    color: #23243a !important;
+    box-shadow: 0 2px 16px rgba(127,198,255,0.08), 0 1px 4px rgba(181,138,255,0.08);
+    transition: background 0.3s, box-shadow 0.3s, transform 0.18s;
+    outline: none;
+}
+.btn:hover,
+.btn:focus {
+    background: linear-gradient(90deg, #b58aff 0%, #ffd1fb 80%, #7fc6ff 100%);
+    color: #23243a !important;
+    box-shadow: 0 4px 24px rgba(127,198,255,0.18), 0 2px 8px rgba(181,138,255,0.18);
+    transform: translateY(-2px) scale(1.04);
+}
+.btn:active {
+    background: linear-gradient(90deg, #7fc6ff 0%, #b58aff 60%, #ffd1fb 100%);
+    box-shadow: 0 1px 6px rgba(127,198,255,0.10);
+    transform: scale(0.98);
+}
 body {
     font-family: "Noto Sans JP", "游ゴシック", "メイリオ", "MS PGothic", Helvetica, Arial, Verdana, sans-serif;
     margin: 0;
     padding: 0;
     text-align: center;
     width: 100%;
-    height: 100%;
-    color:white;
-    background-color:#333c5e;/*背景色*/
+    min-height: 100vh;
+    color: #e6eef8;
+    position: relative;
+    /* 水平方向のはみ出しは防ぐが、縦スクロールは端末に任せる（モバイルで無効化されないように） */
+    overflow-x: hidden;
+    /* 暗めのグラデーション + 微かな放射光 */
+    background-color: #071021;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.03) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255,255,255,0.02) 0%, transparent 18%),
+        linear-gradient(135deg, #071021 0%, #0e1728 60%, #081225 100%);
+    background-attachment: fixed;
+    /* マウスによる微小移動（px）と回転アニメの長さを JS で書き換えられるように変数にする */
+    --mouse-x: 0px;
+    --mouse-y: 0px;
+    --bg-rotate-duration: 80s; /* 以前は 40s。遅めに設定 */
 }
 /* 
 header, .events, footer {
@@ -19,12 +63,79 @@ header, .events, footer {
     border: 1px solid #ccc;
 }
 
-#particles-js{ 
-    position:fixed;/*描画固定*/
-    z-index:-1000;/*描画を一番下に*/
+#particles-js{
+    position: fixed; /* 描画固定 */
+    z-index: -2; /* 背景層のさらに下に配置（追加の装飾は -1 を使用） */
     width: 100%;
     height: 100%;
-    background-color:#333c5e;/*背景色*/
+    pointer-events: none;
+    opacity: 0.45; /* 幾何学模様の主張を抑える */
+    background-color: transparent; /* 背景色は body 側で処理 */
+}
+
+/* 軽いぼかしと回転アニメでおしゃれ感を追加 */
+body::before{
+    content: "";
+    position: fixed;
+    inset: -40%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        conic-gradient(from 120deg at 50% 50%, rgba(255,255,255,0.03), transparent 25%, rgba(255,255,255,0.02)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 60px);
+    opacity: 0.7;
+    filter: blur(36px) saturate(1.05);
+    /* 保守のため残すが、マウス追従は以下の .bg-blob 要素で確実に行います */
+    opacity: 0.35;
+}
+
+/* 直接 JS で transform を触れる実体要素。疑似要素より確実に反映される。 */
+.bg-blob{
+    position: fixed;
+    inset: -40%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        conic-gradient(from 120deg at 50% 50%, rgba(255,255,255,0.03), transparent 25%, rgba(255,255,255,0.02)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 60px);
+    filter: blur(36px) saturate(1.05);
+    transform: translate(0px, 0px) scale(1.15);
+}
+
+/* 回転は内側要素で行い、外側の translate と衝突しないように分離 */
+.bg-blob .rotator{
+    width: 100%;
+    height: 100%;
+    animation: bg-rotate var(--bg-rotate-duration, 80s) linear infinite;
+}
+
+body::after{
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,0.02) 0, transparent 40%);
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+}
+
+@keyframes bg-rotate{
+    /* キーフレームでも translate を保持（変数で渡す） */
+    to { transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px)) rotate(360deg) scale(1.15); }
+}
+/* Mobile: enable vertical scrolling and disable heavy background effects for performance */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* タッチの慣性スクロール */
+    }
+    /* モバイルでは重いエフェクトをオフにしてスクロールとパフォーマンスを優先 */
+    .bg-blob, body::before, body::after, #particles-js {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 }
 #wrapper {
     position: relative;
@@ -58,5 +169,50 @@ a{
 .navbarsetting{
     opacity: 0.9;
 
+}
+
+/* Section heading styling: left-aligned, larger vertical margins, decorative accent */
+.h2.text-start{
+    text-align: left;
+    margin: 60px 0 20px 0; /* 上下を多めにとる */
+    font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    line-height: 1.15;
+    color: transparent;
+    background: linear-gradient(90deg,#7fc6ff 0%, #b58aff 50%, #ffd1fb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    position: relative;
+    padding-left: 30px; /* space for accent bar */
+    transition: transform 260ms ease, filter 260ms ease;
+}
+
+.h2.text-start::before{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 1em; /* 短めに調整 */
+    background: linear-gradient(180deg,#5da8ff, #9a6bff);
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(74,63,255,0.08);
+}
+
+.h2.text-start:hover{
+    transform: translateX(6px) scale(1.01);
+    filter: drop-shadow(0 6px 18px rgba(74,63,255,0.06));
+}
+
+@media (max-width: 768px){
+    .h2.text-start{
+        margin: 40px 0 15px 0;
+        font-size: 1.4rem;
+        padding-left: 14px;
+    }
+    .h2.text-start::after{ width: 48px; }
+    .h2.text-start::before{ width:6px; }
 }
 
