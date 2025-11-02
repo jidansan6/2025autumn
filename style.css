@@ -131,7 +131,16 @@ body::after{
         -webkit-overflow-scrolling: touch; /* タッチの慣性スクロール */
     }
     /* モバイルでは重いエフェクトをオフにしてスクロールとパフォーマンスを優先 */
-    .bg-blob, body::before, body::after, #particles-js {
+    /* スマホでもグラデ背景は表示。blurとアニメ速度を弱める */
+    .bg-blob, body::before {
+        display: block !important;
+        opacity: 0.7 !important;
+        filter: blur(18px) saturate(1.01) !important;
+    }
+    .bg-blob .rotator {
+        animation-duration: 160s !important;
+    }
+    body::after {
         display: none !important;
         opacity: 0 !important;
         pointer-events: none !important;
