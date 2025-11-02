@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech0ヒマつぶし2048パズル</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="puzzle.css">
+</head>
+<body>
+    <div id="game-container" class="container">
+        <h1 class="mb-3" style="font-weight: 600;">暇つぶし2048パズル</h1>
+        <div id="howto" class="howto-box mb-3">
+        <h2 class="howto-title mb-2">遊び方</h2>
+        <ul class="howto-list mb-4">
+            <li class="mb-2">PCは <span class="key">←↑→↓</span> キーで遊んでね</li>
+            <li>スマホは <span class="swipe">スワイプ</span> で動かす方向へ！</li>
+        </ul>
+        </div>
+        <div id="score">Score: 0</div>
+        <div id="board"></div>
+        <div id="controls">
+        <button id="restartBtn">リスタート</button>
+        </div>
+        <div id="gameOver" style="display:none;">
+        <h2>Game Over!</h2>
+        <button id="restartBtn2">Restart</button>
+        </div>
+    </div>
+    <script src="puzzle.js"></script>
+</body>
+</html>
